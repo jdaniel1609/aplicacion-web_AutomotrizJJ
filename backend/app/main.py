@@ -1,7 +1,21 @@
-from fastapi import FastAPI
+import logging
+from datetime import datetime
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.routes import auth
+
+# Configurar logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('aplicacion.log', encoding='utf-8'),
+        logging.StreamHandler()
+    ]
+)
+
+logger = logging.getLogger(__name__)
 
 # Crear instancia de FastAPI
 app = FastAPI(
@@ -21,6 +35,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Middleware para logging de requests
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = datetime.now()
+    
+    # Log de entrada
+    logger.info(f"Incoming request: {request.method} {request.url.path}")
+    logger.info(f"Client IP: {request.client.host}")
+    
+    response = await call_next(request)
+    
+    # Calcular tiempo de procesamiento
+    process_time = (datetime.now() - start_time).total_seconds()
+    
+    # Log de salida
+    logger.info(f"Completed: {request.method} {request.url.path} - Status: {response.status_code} - Time: {process_time:.2f}s")
+    
+    return response
+
 # Incluir routers
 app.include_router(auth.router)
 
@@ -28,6 +61,7 @@ app.include_router(auth.router)
 @app.get("/")
 async def root():
     """Endpoint raíz de la API"""
+    logger.info("Root endpoint accessed")
     return {
         "message": "Bienvenido a la API de Automotriz JJ",
         "version": settings.APP_VERSION,
@@ -39,6 +73,7 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Endpoint para verificar el estado del servidor"""
+    logger.info("Health check accessed")
     return {
         "status": "healthy",
         "service": settings.APP_NAME,
@@ -50,14 +85,18 @@ async def health_check():
 @app.on_event("startup")
 async def startup_event():
     """Se ejecuta cuando la aplicación inicia"""
-    print(f"🚀 Iniciando {settings.APP_NAME} v{settings.APP_VERSION}")
-    print(f"📝 Documentación disponible en: http://localhost:8000/docs")
-    print(f"🔐 Usuario de prueba: {settings.DEFAULT_USERNAME}")
-    print(f"🔑 Contraseña de prueba: {settings.DEFAULT_PASSWORD}")
+    logger.info("=" * 50)
+    logger.info(f"🚀 Iniciando {settings.APP_NAME} v{settings.APP_VERSION}")
+    logger.info(f"📝 Documentación disponible en: http://localhost:8000/docs")
+    logger.info(f"🔐 Usuario de prueba: {settings.DEFAULT_USERNAME}")
+    logger.info(f"🔑 Contraseña de prueba: {settings.DEFAULT_PASSWORD}")
+    logger.info("=" * 50)
 
 
 # Evento de cierre
 @app.on_event("shutdown")
 async def shutdown_event():
     """Se ejecuta cuando la aplicación se cierra"""
-    print(f"👋 Cerrando {settings.APP_NAME}")
+    logger.info("=" * 50)
+    logger.info(f"👋 Cerrando {settings.APP_NAME}")
+    logger.info("=" * 50)

@@ -19,10 +19,11 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const token = getStoredToken()
-    if (token) {
+    const storedUser = localStorage.getItem('user_data')
+    
+    if (token && storedUser) {
       setIsAuthenticated(true)
-      // Aquí podrías hacer una llamada para obtener los datos del usuario
-      setUser({ token })
+      setUser(JSON.parse(storedUser))
     }
     setLoading(false)
   }, [])
@@ -34,10 +35,19 @@ export const AuthProvider = ({ children }) => {
       
       if (response.access_token) {
         setStoredToken(response.access_token)
-        setUser({ 
+        
+        const userData = {
           token: response.access_token,
-          username: username 
-        })
+          username: response.user.username,
+          full_name: response.user.full_name,
+          email: response.user.email,
+          role: response.user.role,
+          codigo_vendedor: response.user.codigo_vendedor,
+          sucursal: response.user.sucursal
+        }
+        
+        localStorage.setItem('user_data', JSON.stringify(userData))
+        setUser(userData)
         setIsAuthenticated(true)
         return { success: true }
       }
@@ -56,6 +66,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     removeStoredToken()
+    localStorage.removeItem('user_data')
     setUser(null)
     setIsAuthenticated(false)
   }
