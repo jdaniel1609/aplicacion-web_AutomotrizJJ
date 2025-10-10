@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
+import Modal from '../components/Modal'
 
 const VentaAuto = () => {
   const { user } = useAuth()
@@ -14,6 +15,12 @@ const VentaAuto = () => {
   })
 
   const [fechaActual, setFechaActual] = useState('')
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalConfig, setModalConfig] = useState({
+    title: '',
+    message: '',
+    type: 'success'
+  })
 
   useEffect(() => {
     // Obtener fecha actual
@@ -30,11 +37,84 @@ const VentaAuto = () => {
     }))
   }
 
+  const validateForm = () => {
+    // Validar que todos los campos estén llenos
+    const requiredFields = [
+      'autosDisponibles',
+      'tipoCompra',
+      'montoFisco',
+      'nombreComprador',
+      'dniComprador',
+      'contactoComprador'
+    ]
+
+    for (let field of requiredFields) {
+      if (!formData[field] || formData[field].trim() === '') {
+        return false
+      }
+    }
+
+    // Validar DNI (debe ser 8 dígitos)
+    if (formData.dniComprador.length !== 8 || !/^\d+$/.test(formData.dniComprador)) {
+      return 'dni'
+    }
+
+    return true
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
+    
+    const validation = validateForm()
+
+    if (validation === false) {
+      // Mostrar modal de error
+      setModalConfig({
+        title: 'Gestor de Ventas',
+        message: '⚠️ Es obligatorio rellenar todos los campos',
+        type: 'error'
+      })
+      setModalOpen(true)
+      return
+    }
+
+    if (validation === 'dni') {
+      setModalConfig({
+        title: 'Gestor de Ventas',
+        message: '⚠️ El DNI debe tener exactamente 8 dígitos',
+        type: 'error'
+      })
+      setModalOpen(true)
+      return
+    }
+
+    // Si todo está bien, registrar la venta
     console.log('Datos de venta:', formData)
-    // Aquí puedes enviar los datos al backend
-    alert('Venta registrada exitosamente')
+    console.log('Usuario:', user)
+    console.log('Fecha:', fechaActual)
+
+    // Mostrar modal de éxito
+    setModalConfig({
+      title: 'Gestor de Ventas',
+      message: '💾 Registro de venta completado con éxito.',
+      type: 'success'
+    })
+    setModalOpen(true)
+
+    // Limpiar formulario después del registro exitoso
+    setFormData({
+      autosDisponibles: '',
+      tipoCompra: '',
+      montoFisco: '',
+      nombreComprador: '',
+      codigoVendedor: user?.codigo_vendedor || '',
+      dniComprador: '',
+      contactoComprador: ''
+    })
+  }
+
+  const closeModal = () => {
+    setModalOpen(false)
   }
 
   return (
@@ -74,14 +154,13 @@ const VentaAuto = () => {
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Autos Disponibles
+                    Autos Disponibles <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="autosDisponibles"
                     value={formData.autosDisponibles}
                     onChange={handleChange}
                     className="input-field"
-                    required
                   >
                     <option value="">Seleccionar auto</option>
                     <option value="Toyota Corolla 2024">Toyota Corolla 2024</option>
@@ -89,19 +168,21 @@ const VentaAuto = () => {
                     <option value="Nissan Sentra 2024">Nissan Sentra 2024</option>
                     <option value="Hyundai Elantra 2024">Hyundai Elantra 2024</option>
                     <option value="Mazda 3 2024">Mazda 3 2024</option>
+                    <option value="Kia Forte 2024">Kia Forte 2024</option>
+                    <option value="Chevrolet Cruze 2024">Chevrolet Cruze 2024</option>
+                    <option value="Ford Focus 2024">Ford Focus 2024</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tipo de Compra (Cash/Crédito)
+                    Tipo de Compra (Cash/Crédito) <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="tipoCompra"
                     value={formData.tipoCompra}
                     onChange={handleChange}
                     className="input-field"
-                    required
                   >
                     <option value="">Seleccionar tipo</option>
                     <option value="Cash">Cash</option>
@@ -111,7 +192,7 @@ const VentaAuto = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Costo del Vehículo (S/.)
+                    Monto o Fisco <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -120,7 +201,6 @@ const VentaAuto = () => {
                     onChange={handleChange}
                     placeholder="Ej: S/. 50,000"
                     className="input-field"
-                    required
                   />
                 </div>
               </div>
@@ -129,7 +209,7 @@ const VentaAuto = () => {
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nombre del Comprador
+                    Nombre del Comprador <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -138,29 +218,28 @@ const VentaAuto = () => {
                     onChange={handleChange}
                     placeholder="Nombre completo"
                     className="input-field"
-                    required
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    DNI del Comprador
+                    Datos del Comprador (DNI) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     name="dniComprador"
                     value={formData.dniComprador}
                     onChange={handleChange}
-                    placeholder="DNI del comprador"
+                    placeholder="DNI de 8 dígitos"
                     className="input-field"
                     maxLength="8"
-                    required
+                    pattern="\d*"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Número de contacto del Comprador
+                    Datos del Comprador (Contacto) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="tel"
@@ -169,7 +248,6 @@ const VentaAuto = () => {
                     onChange={handleChange}
                     placeholder="Teléfono de contacto"
                     className="input-field"
-                    required
                   />
                 </div>
               </div>
@@ -192,11 +270,21 @@ const VentaAuto = () => {
         {/* Información adicional */}
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
           <p className="text-sm text-blue-700">
-            <span className="font-semibold">Nota:</span> Todos los campos son obligatorios. 
+            <span className="font-semibold">Nota:</span> Todos los campos marcados con 
+            <span className="text-red-500 font-bold"> *</span> son obligatorios. 
             Asegúrese de verificar los datos antes de registrar la venta.
           </p>
         </div>
       </div>
+
+      {/* Modal */}
+      <Modal
+        isOpen={modalOpen}
+        onClose={closeModal}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+      />
     </div>
   )
 }
