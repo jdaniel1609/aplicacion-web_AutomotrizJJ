@@ -3,7 +3,8 @@ from datetime import datetime
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.routes import auth
+from app.routes import auth, venta
+from app.database import init_database, seed_initial_data
 
 # Configurar logging
 logging.basicConfig(
@@ -56,6 +57,7 @@ async def log_requests(request: Request, call_next):
 
 # Incluir routers
 app.include_router(auth.router)
+app.include_router(venta.router)
 
 
 @app.get("/")
@@ -87,6 +89,16 @@ async def startup_event():
     """Se ejecuta cuando la aplicación inicia"""
     logger.info("=" * 50)
     logger.info(f"🚀 Iniciando {settings.APP_NAME} v{settings.APP_VERSION}")
+    
+    # Inicializar base de datos
+    try:
+        logger.info("📊 Inicializando base de datos...")
+        init_database()
+        seed_initial_data()
+        logger.info("✅ Base de datos lista")
+    except Exception as e:
+        logger.error(f"❌ Error al inicializar base de datos: {e}")
+    
     logger.info(f"📝 Documentación disponible en: http://localhost:8000/docs")
     logger.info(f"🔐 Usuario de prueba: {settings.DEFAULT_USERNAME}")
     logger.info(f"🔑 Contraseña de prueba: {settings.DEFAULT_PASSWORD}")
