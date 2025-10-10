@@ -176,7 +176,7 @@ const VentaAuto = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tipo de Compra (Cash/Crédito) <span className="text-red-500">*</span>
+                    Tipo de Compra <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="tipoCompra"
@@ -261,7 +261,7 @@ const VentaAuto = () => {
                          hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1
                          text-lg"
               >
-                VENTA
+                REGISTRAR VENTA
               </button>
             </div>
           </form>
