@@ -46,15 +46,9 @@ const Login = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 ml-3">Automotriz JJ</h1>
+              <h1 className="text-2xl font-bold text-gray-900 ml-3">AUTOMOTRIZ JJ</h1>
             </div>
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Login</h2>
-            <p className="text-gray-600">
-              Don't have an account? 
-              <span className="text-red-500 ml-1 cursor-pointer hover:underline">
-                Get SeedProd Now
-              </span>
-            </p>
           </div>
 
           {/* Formulario */}
@@ -155,17 +149,6 @@ const Login = () => {
               </a>
             </div>
           </form>
-
-          {/* Footer Links */}
-          <div className="mt-8 text-center text-xs text-gray-500">
-            <p>Copyright © 2019 SeedProd, LLC. SeedProd™ is a</p>
-            <p>trademark of SeedProd, LLC</p>
-            <div className="mt-2 space-x-2">
-              <a href="#" className="hover:underline">Terms of Service</a>
-              <span>|</span>
-              <a href="#" className="hover:underline">Privacy Policy</a>
-            </div>
-          </div>
         </div>
       </div>
 

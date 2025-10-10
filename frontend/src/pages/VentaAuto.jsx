@@ -111,7 +111,7 @@ const VentaAuto = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Monto o Fisco
+                    Costo del Vehículo (S/.)
                   </label>
                   <input
                     type="text"
@@ -144,7 +144,7 @@ const VentaAuto = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Datos del Comprador (DNI)
+                    DNI del Comprador
                   </label>
                   <input
                     type="text"
@@ -160,7 +160,7 @@ const VentaAuto = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Datos del Comprador (Contacto)
+                    Número de contacto del Comprador
                   </label>
                   <input
                     type="tel"
