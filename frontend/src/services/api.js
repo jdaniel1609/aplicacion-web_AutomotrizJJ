@@ -2,13 +2,14 @@ import axios from 'axios'
 import { getStoredToken } from '../utils/auth'
 
 // Configuración base de la API
-const API_BASE_URL = 'http://localhost:8000'  // Cambia por la URL de tu FastAPI
+const API_BASE_URL = 'http://localhost:8000'
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000,
 })
 
 // Interceptor para agregar el token a todas las peticiones
@@ -30,21 +31,25 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expirado o inválido
       localStorage.removeItem('auth_token')
+      localStorage.removeItem('user_data')
       window.location.href = '/login'
     }
     return Promise.reject(error)
   }
 )
 
-// Función para login
+// ============================================
+// AUTH ENDPOINTS
+// ============================================
+
 export const loginUser = async (username, password) => {
   try {
-    // FastAPI generalmente espera form data para OAuth2
-    const formData = new FormData()
+    const formData = new URLSearchParams()
     formData.append('username', username)
     formData.append('password', password)
+
+    console.log('🔐 Intentando login con:', { username, url: `${API_BASE_URL}/auth/login` })
 
     const response = await apiClient.post('/auth/login', formData, {
       headers: {
@@ -52,13 +57,14 @@ export const loginUser = async (username, password) => {
       },
     })
     
+    console.log('✅ Login exitoso:', response.data)
     return response.data
   } catch (error) {
+    console.error('❌ Error en login:', error)
     throw error
   }
 }
 
-// Función para obtener perfil del usuario
 export const getUserProfile = async () => {
   try {
     const response = await apiClient.get('/auth/me')
@@ -68,7 +74,55 @@ export const getUserProfile = async () => {
   }
 }
 
-// Función para verificar el estado del servidor
+// ============================================
+// VENTA ENDPOINTS
+// ============================================
+
+export const getAutosDisponibles = async (search = '') => {
+  try {
+    const params = search ? { search } : {}
+    const response = await apiClient.get('/venta/autos', { params })
+    return response.data
+  } catch (error) {
+    console.error('❌ Error al obtener autos:', error)
+    throw error
+  }
+}
+
+export const getTiposCompra = async () => {
+  try {
+    const response = await apiClient.get('/venta/tipos-compra')
+    return response.data
+  } catch (error) {
+    console.error('❌ Error al obtener tipos de compra:', error)
+    throw error
+  }
+}
+
+export const registrarVenta = async (ventaData) => {
+  try {
+    console.log('📝 Registrando venta:', ventaData)
+    const response = await apiClient.post('/venta/registrar', ventaData)
+    console.log('✅ Venta registrada:', response.data)
+    return response.data
+  } catch (error) {
+    console.error('❌ Error al registrar venta:', error)
+    throw error
+  }
+}
+
+export const getMisVentas = async (limit = 50) => {
+  try {
+    const response = await apiClient.get('/venta/mis-ventas', {
+      params: { limit }
+    })
+    return response.data
+  } catch (error) {
+    console.error('❌ Error al obtener ventas:', error)
+    throw error
+  }
+}
+
 export const checkServerHealth = async () => {
   try {
     const response = await apiClient.get('/health')

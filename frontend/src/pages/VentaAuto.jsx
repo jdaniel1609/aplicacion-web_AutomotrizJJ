@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import Modal from '../components/Modal'
+import AutoSearchSelect from '../components/AutoSearchSelect'
+import { getTiposCompra, registrarVenta } from '../services/api'
 
 const VentaAuto = () => {
   const { user } = useAuth()
   const [formData, setFormData] = useState({
-    autosDisponibles: '',
-    tipoCompra: '',
+    auto_id: '',
+    auto_text: '',
+    tipo_compra_id: '',
     montoFisco: '',
     nombreComprador: '',
-    codigoVendedor: user?.codigo_vendedor || '',
     dniComprador: '',
     contactoComprador: ''
   })
 
+  const [tiposCompra, setTiposCompra] = useState([])
   const [fechaActual, setFechaActual] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [modalConfig, setModalConfig] = useState({
@@ -21,13 +24,26 @@ const VentaAuto = () => {
     message: '',
     type: 'success'
   })
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     // Obtener fecha actual
     const hoy = new Date()
     const opciones = { year: 'numeric', month: 'long', day: 'numeric' }
     setFechaActual(hoy.toLocaleDateString('es-ES', opciones))
+
+    // Cargar tipos de compra
+    loadTiposCompra()
   }, [])
+
+  const loadTiposCompra = async () => {
+    try {
+      const response = await getTiposCompra()
+      setTiposCompra(response.tipos || [])
+    } catch (error) {
+      console.error('Error al cargar tipos de compra:', error)
+    }
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -37,21 +53,20 @@ const VentaAuto = () => {
     }))
   }
 
+  const handleAutoChange = (autoId, autoText) => {
+    setFormData(prev => ({
+      ...prev,
+      auto_id: autoId,
+      auto_text: autoText
+    }))
+  }
+
   const validateForm = () => {
     // Validar que todos los campos estén llenos
-    const requiredFields = [
-      'autosDisponibles',
-      'tipoCompra',
-      'montoFisco',
-      'nombreComprador',
-      'dniComprador',
-      'contactoComprador'
-    ]
-
-    for (let field of requiredFields) {
-      if (!formData[field] || formData[field].trim() === '') {
-        return false
-      }
+    if (!formData.auto_id || !formData.tipo_compra_id || !formData.montoFisco.trim() ||
+        !formData.nombreComprador.trim() || !formData.dniComprador.trim() || 
+        !formData.contactoComprador.trim()) {
+      return false
     }
 
     // Validar DNI (debe ser 8 dígitos)
@@ -62,13 +77,12 @@ const VentaAuto = () => {
     return true
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     
     const validation = validateForm()
 
     if (validation === false) {
-      // Mostrar modal de error
       setModalConfig({
         title: 'Gestor de Ventas',
         message: '⚠️ Es obligatorio rellenar todos los campos',
@@ -88,29 +102,51 @@ const VentaAuto = () => {
       return
     }
 
-    // Si todo está bien, registrar la venta
-    console.log('Datos de venta:', formData)
-    console.log('Usuario:', user)
-    console.log('Fecha:', fechaActual)
+    // Registrar venta en la base de datos
+    try {
+      setLoading(true)
 
-    // Mostrar modal de éxito
-    setModalConfig({
-      title: 'Gestor de Ventas',
-      message: '💾 Registro de venta completado con éxito.',
-      type: 'success'
-    })
-    setModalOpen(true)
+      const ventaData = {
+        auto_id: parseInt(formData.auto_id),
+        tipo_compra_id: parseInt(formData.tipo_compra_id),
+        monto_fisco: formData.montoFisco,
+        nombre_comprador: formData.nombreComprador,
+        dni_comprador: formData.dniComprador,
+        contacto_comprador: formData.contactoComprador
+      }
 
-    // Limpiar formulario después del registro exitoso
-    setFormData({
-      autosDisponibles: '',
-      tipoCompra: '',
-      montoFisco: '',
-      nombreComprador: '',
-      codigoVendedor: user?.codigo_vendedor || '',
-      dniComprador: '',
-      contactoComprador: ''
-    })
+      const response = await registrarVenta(ventaData)
+
+      // Mostrar modal de éxito
+      setModalConfig({
+        title: 'Gestor de Ventas',
+        message: '💾 Registro de venta completado con éxito.',
+        type: 'success'
+      })
+      setModalOpen(true)
+
+      // Limpiar formulario
+      setFormData({
+        auto_id: '',
+        auto_text: '',
+        tipo_compra_id: '',
+        montoFisco: '',
+        nombreComprador: '',
+        dniComprador: '',
+        contactoComprador: ''
+      })
+
+    } catch (error) {
+      console.error('Error al registrar venta:', error)
+      setModalConfig({
+        title: 'Gestor de Ventas',
+        message: '⚠️ Error al registrar la venta. Por favor intente nuevamente.',
+        type: 'error'
+      })
+      setModalOpen(true)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const closeModal = () => {
@@ -156,22 +192,11 @@ const VentaAuto = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Autos Disponibles <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    name="autosDisponibles"
-                    value={formData.autosDisponibles}
-                    onChange={handleChange}
-                    className="input-field"
-                  >
-                    <option value="">Seleccionar auto</option>
-                    <option value="Toyota Corolla 2024">Toyota Corolla 2024</option>
-                    <option value="Honda Civic 2024">Honda Civic 2024</option>
-                    <option value="Nissan Sentra 2024">Nissan Sentra 2024</option>
-                    <option value="Hyundai Elantra 2024">Hyundai Elantra 2024</option>
-                    <option value="Mazda 3 2024">Mazda 3 2024</option>
-                    <option value="Kia Forte 2024">Kia Forte 2024</option>
-                    <option value="Chevrolet Cruze 2024">Chevrolet Cruze 2024</option>
-                    <option value="Ford Focus 2024">Ford Focus 2024</option>
-                  </select>
+                  <AutoSearchSelect
+                    value={formData.auto_id}
+                    onChange={handleAutoChange}
+                    required={true}
+                  />
                 </div>
 
                 <div>
@@ -179,14 +204,18 @@ const VentaAuto = () => {
                     Tipo de Compra <span className="text-red-500">*</span>
                   </label>
                   <select
-                    name="tipoCompra"
-                    value={formData.tipoCompra}
+                    name="tipo_compra_id"
+                    value={formData.tipo_compra_id}
                     onChange={handleChange}
                     className="input-field"
+                    required
                   >
                     <option value="">Seleccionar tipo</option>
-                    <option value="Cash">Cash</option>
-                    <option value="Crédito">Crédito</option>
+                    {tiposCompra.map(tipo => (
+                      <option key={tipo.id} value={tipo.id}>
+                        {tipo.tipo} {tipo.descripcion && `- ${tipo.descripcion}`}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -201,6 +230,7 @@ const VentaAuto = () => {
                     onChange={handleChange}
                     placeholder="Ej: S/. 50,000"
                     className="input-field"
+                    required
                   />
                 </div>
               </div>
@@ -218,6 +248,7 @@ const VentaAuto = () => {
                     onChange={handleChange}
                     placeholder="Nombre completo"
                     className="input-field"
+                    required
                   />
                 </div>
 
@@ -234,6 +265,7 @@ const VentaAuto = () => {
                     className="input-field"
                     maxLength="8"
                     pattern="\d*"
+                    required
                   />
                 </div>
 
@@ -248,6 +280,7 @@ const VentaAuto = () => {
                     onChange={handleChange}
                     placeholder="Teléfono de contacto"
                     className="input-field"
+                    required
                   />
                 </div>
               </div>
@@ -257,11 +290,12 @@ const VentaAuto = () => {
             <div className="flex justify-center mt-8">
               <button
                 type="submit"
-                className="bg-gradient-blue text-white font-bold py-4 px-16 rounded-lg
-                         hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1
-                         text-lg"
+                disabled={loading}
+                className={`bg-gradient-blue text-white font-bold py-4 px-16 rounded-lg text-lg
+                         transition-all duration-300 
+                         ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-xl transform hover:-translate-y-1'}`}
               >
-                REGISTRAR VENTA
+                {loading ? 'Registrando...' : 'VENTA'}
               </button>
             </div>
           </form>
