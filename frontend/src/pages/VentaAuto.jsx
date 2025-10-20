@@ -2,21 +2,20 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import Modal from '../components/Modal'
 import AutoSearchSelect from '../components/AutoSearchSelect'
-import { getTiposCompra, registrarVenta } from '../services/api'
+import { registrarVenta } from '../services/api'
 
 const VentaAuto = () => {
   const { user } = useAuth()
   const [formData, setFormData] = useState({
     auto_id: '',
     auto_text: '',
-    tipo_compra_id: '',
+    tipo_compra: '',
     montoFisco: '',
     nombreComprador: '',
     dniComprador: '',
     contactoComprador: ''
   })
 
-  const [tiposCompra, setTiposCompra] = useState([])
   const [fechaActual, setFechaActual] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [modalConfig, setModalConfig] = useState({
@@ -27,23 +26,10 @@ const VentaAuto = () => {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    // Obtener fecha actual
     const hoy = new Date()
     const opciones = { year: 'numeric', month: 'long', day: 'numeric' }
     setFechaActual(hoy.toLocaleDateString('es-ES', opciones))
-
-    // Cargar tipos de compra
-    loadTiposCompra()
   }, [])
-
-  const loadTiposCompra = async () => {
-    try {
-      const response = await getTiposCompra()
-      setTiposCompra(response.tipos || [])
-    } catch (error) {
-      console.error('Error al cargar tipos de compra:', error)
-    }
-  }
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -62,14 +48,12 @@ const VentaAuto = () => {
   }
 
   const validateForm = () => {
-    // Validar que todos los campos estén llenos
-    if (!formData.auto_id || !formData.tipo_compra_id || !formData.montoFisco.trim() ||
+    if (!formData.auto_id || !formData.tipo_compra || !formData.montoFisco.trim() ||
         !formData.nombreComprador.trim() || !formData.dniComprador.trim() || 
         !formData.contactoComprador.trim()) {
       return false
     }
 
-    // Validar DNI (debe ser 8 dígitos)
     if (formData.dniComprador.length !== 8 || !/^\d+$/.test(formData.dniComprador)) {
       return 'dni'
     }
@@ -102,13 +86,12 @@ const VentaAuto = () => {
       return
     }
 
-    // Registrar venta en la base de datos
     try {
       setLoading(true)
 
       const ventaData = {
         auto_id: parseInt(formData.auto_id),
-        tipo_compra_id: parseInt(formData.tipo_compra_id),
+        tipo_compra: formData.tipo_compra,
         monto_fisco: formData.montoFisco,
         nombre_comprador: formData.nombreComprador,
         dni_comprador: formData.dniComprador,
@@ -117,7 +100,6 @@ const VentaAuto = () => {
 
       const response = await registrarVenta(ventaData)
 
-      // Mostrar modal de éxito
       setModalConfig({
         title: 'Gestor de Ventas',
         message: '💾 Registro de venta completado con éxito.',
@@ -125,11 +107,10 @@ const VentaAuto = () => {
       })
       setModalOpen(true)
 
-      // Limpiar formulario
       setFormData({
         auto_id: '',
         auto_text: '',
-        tipo_compra_id: '',
+        tipo_compra: '',
         montoFisco: '',
         nombreComprador: '',
         dniComprador: '',
@@ -204,18 +185,15 @@ const VentaAuto = () => {
                     Tipo de Compra <span className="text-red-500">*</span>
                   </label>
                   <select
-                    name="tipo_compra_id"
-                    value={formData.tipo_compra_id}
+                    name="tipo_compra"
+                    value={formData.tipo_compra}
                     onChange={handleChange}
                     className="input-field"
                     required
                   >
                     <option value="">Seleccionar tipo</option>
-                    {tiposCompra.map(tipo => (
-                      <option key={tipo.id} value={tipo.id}>
-                        {tipo.tipo} {tipo.descripcion && `- ${tipo.descripcion}`}
-                      </option>
-                    ))}
+                    <option value="Cash">Cash</option>
+                    <option value="Crédito">Crédito</option>
                   </select>
                 </div>
 

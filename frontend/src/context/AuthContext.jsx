@@ -43,7 +43,9 @@ export const AuthProvider = ({ children }) => {
           email: response.user.email,
           role: response.user.role,
           codigo_vendedor: response.user.codigo_vendedor,
-          sucursal: response.user.sucursal
+          sucursal_provincia: response.user.sucursal_provincia,
+          sucursal_distrito: response.user.sucursal_distrito,
+          sucursal: `${response.user.sucursal_provincia}/${response.user.sucursal_distrito}`
         }
         
         localStorage.setItem('user_data', JSON.stringify(userData))

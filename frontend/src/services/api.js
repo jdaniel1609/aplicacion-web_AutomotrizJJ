@@ -1,7 +1,6 @@
 import axios from 'axios'
 import { getStoredToken } from '../utils/auth'
 
-// Configuración base de la API
 const API_BASE_URL = 'http://localhost:8000'
 
 const apiClient = axios.create({
@@ -12,7 +11,6 @@ const apiClient = axios.create({
   timeout: 10000,
 })
 
-// Interceptor para agregar el token a todas las peticiones
 apiClient.interceptors.request.use(
   (config) => {
     const token = getStoredToken()
@@ -26,7 +24,6 @@ apiClient.interceptors.request.use(
   }
 )
 
-// Interceptor para manejar respuestas y errores
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -39,10 +36,7 @@ apiClient.interceptors.response.use(
   }
 )
 
-// ============================================
 // AUTH ENDPOINTS
-// ============================================
-
 export const loginUser = async (username, password) => {
   try {
     const formData = new URLSearchParams()
@@ -74,10 +68,7 @@ export const getUserProfile = async () => {
   }
 }
 
-// ============================================
 // VENTA ENDPOINTS
-// ============================================
-
 export const getAutosDisponibles = async (search = '') => {
   try {
     const params = search ? { search } : {}
@@ -85,16 +76,6 @@ export const getAutosDisponibles = async (search = '') => {
     return response.data
   } catch (error) {
     console.error('❌ Error al obtener autos:', error)
-    throw error
-  }
-}
-
-export const getTiposCompra = async () => {
-  try {
-    const response = await apiClient.get('/venta/tipos-compra')
-    return response.data
-  } catch (error) {
-    console.error('❌ Error al obtener tipos de compra:', error)
     throw error
   }
 }

@@ -13,18 +13,9 @@ router = APIRouter(prefix="/auth", tags=["Autenticación"])
 
 @router.post("/login", response_model=dict)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    """
-    Endpoint de login para autenticar usuarios
-    
-    Recibe credenciales mediante OAuth2PasswordRequestForm:
-    - username: Nombre de usuario
-    - password: Contraseña
-    
-    Retorna un token JWT y datos del usuario si las credenciales son válidas
-    """
+    """Endpoint de login para autenticar usuarios"""
     logger.info(f"Intento de login para usuario: {form_data.username}")
     
-    # Autenticar usuario
     user = authenticate_user(form_data.username, form_data.password)
     
     if not user:
@@ -35,16 +26,14 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Crear token de acceso
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user["username"]},
         expires_delta=access_token_expires
     )
     
-    logger.info(f"Login exitoso para usuario: {form_data.username} - Rol: {user.get('role')} - Sucursal: {user.get('sucursal')}")
+    logger.info(f"Login exitoso para usuario: {form_data.username} - Rol: {user.get('role')} - Sucursal: {user.get('sucursal_provincia')}/{user.get('sucursal_distrito')}")
     
-    # Devolver token y datos del usuario
     return {
         "access_token": access_token,
         "token_type": "bearer",
@@ -54,18 +43,15 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
             "email": user["email"],
             "role": user.get("role", "user"),
             "codigo_vendedor": user.get("codigo_vendedor", ""),
-            "sucursal": user.get("sucursal", "")
+            "sucursal_provincia": user.get("sucursal_provincia", ""),
+            "sucursal_distrito": user.get("sucursal_distrito", "")
         }
     }
 
 
 @router.get("/me", response_model=dict)
 async def get_current_user_info(current_user: dict = Depends(get_current_user)):
-    """
-    Obtiene la información del usuario autenticado actualmente
-    
-    Requiere autenticación mediante Bearer token
-    """
+    """Obtiene la información del usuario autenticado actualmente"""
     username = current_user["username"]
     logger.info(f"Solicitud de información de usuario: {username}")
     
@@ -84,15 +70,14 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
         "email": user["email"],
         "role": user.get("role", "user"),
         "codigo_vendedor": user.get("codigo_vendedor", ""),
-        "sucursal": user.get("sucursal", "")
+        "sucursal_provincia": user.get("sucursal_provincia", ""),
+        "sucursal_distrito": user.get("sucursal_distrito", "")
     }
 
 
 @router.post("/logout")
 async def logout(current_user: dict = Depends(get_current_user)):
-    """
-    Endpoint de logout (el token se invalida en el cliente)
-    """
+    """Endpoint de logout"""
     logger.info(f"Logout exitoso para usuario: {current_user['username']}")
     return {
         "message": f"Usuario {current_user['username']} ha cerrado sesión exitosamente"

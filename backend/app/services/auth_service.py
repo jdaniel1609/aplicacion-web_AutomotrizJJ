@@ -14,23 +14,14 @@ def simple_verify_password(plain_password: str, hashed_password: str) -> bool:
 def authenticate_user(username: str, password: str) -> Optional[dict]:
     """
     Autentica un usuario verificando sus credenciales en la base de datos
-    
-    Args:
-        username: Nombre de usuario
-        password: Contraseña en texto plano
-        
-    Returns:
-        dict: Datos del usuario si las credenciales son válidas
-        None: Si las credenciales son inválidas
     """
     conn = get_db_connection()
     cursor = conn.cursor()
     
     try:
-        # Buscar usuario en la base de datos
         cursor.execute('''
             SELECT id, username, password_hash, full_name, email, role, 
-                   codigo_vendedor, sucursal, is_active
+                   codigo_vendedor, sucursal_provincia, sucursal_distrito, is_active
             FROM vendedores
             WHERE username = ?
         ''', (username,))
@@ -41,15 +32,12 @@ def authenticate_user(username: str, password: str) -> Optional[dict]:
             logger.warning(f"❌ Usuario no encontrado: {username}")
             return None
         
-        # Convertir Row a dict
         user = dict(user_row)
         
-        # Verificar contraseña
         if not simple_verify_password(password, user["password_hash"]):
             logger.warning(f"❌ Contraseña incorrecta para usuario: {username}")
             return None
         
-        # Verificar que el usuario esté activo
         if not user.get("is_active", 0):
             logger.warning(f"❌ Usuario inactivo: {username}")
             return None
@@ -65,23 +53,14 @@ def authenticate_user(username: str, password: str) -> Optional[dict]:
 
 
 def get_user(username: str) -> Optional[dict]:
-    """
-    Obtiene un usuario por su nombre de usuario
-    
-    Args:
-        username: Nombre de usuario
-        
-    Returns:
-        dict: Datos del usuario si existe
-        None: Si no existe
-    """
+    """Obtiene un usuario por su nombre de usuario"""
     conn = get_db_connection()
     cursor = conn.cursor()
     
     try:
         cursor.execute('''
             SELECT id, username, full_name, email, role, 
-                   codigo_vendedor, sucursal, is_active
+                   codigo_vendedor, sucursal_provincia, sucursal_distrito, is_active
             FROM vendedores
             WHERE username = ?
         ''', (username,))
@@ -100,23 +79,14 @@ def get_user(username: str) -> Optional[dict]:
 
 
 def get_user_by_id(user_id: int) -> Optional[dict]:
-    """
-    Obtiene un usuario por su ID
-    
-    Args:
-        user_id: ID del usuario
-        
-    Returns:
-        dict: Datos del usuario si existe
-        None: Si no existe
-    """
+    """Obtiene un usuario por su ID"""
     conn = get_db_connection()
     cursor = conn.cursor()
     
     try:
         cursor.execute('''
             SELECT id, username, full_name, email, role, 
-                   codigo_vendedor, sucursal, is_active
+                   codigo_vendedor, sucursal_provincia, sucursal_distrito, is_active
             FROM vendedores
             WHERE id = ?
         ''', (user_id,))
