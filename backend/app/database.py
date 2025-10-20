@@ -118,25 +118,27 @@ def seed_initial_data():
         
         # ============================================
         # VENDEDORES (12 vendedores)
+        # Formato: usuario = primera_letra_nombre + apellido (ej: jpalomino)
+        # Password: nombre+2020 (ej: jose2020)
         # ============================================
         vendedores = [
             # LIMA - 4 distritos (2 vendedores por distrito)
-            ('CARLOS', 'carlos2020', 'Carlos Mendoza', 'carlos@automotrizjj.com', 'vendedor', 'VEN001', 'LIMA', 'Miraflores'),
-            ('SOFIA', 'sofia2020', 'Sofía Vargas', 'sofia@automotrizjj.com', 'vendedor', 'VEN002', 'LIMA', 'Miraflores'),
-            ('MIGUEL', 'miguel2020', 'Miguel Ángel Rojas', 'miguel@automotrizjj.com', 'vendedor', 'VEN003', 'LIMA', 'San Isidro'),
-            ('LAURA', 'laura2020', 'Laura Patricia Díaz', 'laura@automotrizjj.com', 'vendedor', 'VEN004', 'LIMA', 'San Isidro'),
-            ('DIEGO', 'diego2020', 'Diego Alonso Cruz', 'diego@automotrizjj.com', 'vendedor', 'VEN005', 'LIMA', 'Surco'),
-            ('ANDREA', 'andrea2020', 'Andrea Fernanda López', 'andrea@automotrizjj.com', 'vendedor', 'VEN006', 'LIMA', 'Surco'),
-            ('ROBERTO', 'roberto2020', 'Roberto Carlos Silva', 'roberto@automotrizjj.com', 'vendedor', 'VEN007', 'LIMA', 'La Molina'),
-            ('PATRICIA', 'patricia2020', 'Patricia Elena Torres', 'patricia@automotrizjj.com', 'vendedor', 'VEN008', 'LIMA', 'La Molina'),
+            ('cmendoza', 'carlos2020', 'Carlos Mendoza', 'cmendoza@automotrizjj.com', 'vendedor', 'VEN001', 'LIMA', 'Miraflores'),
+            ('svargas', 'sofia2020', 'Sofía Vargas', 'svargas@automotrizjj.com', 'vendedor', 'VEN002', 'LIMA', 'Miraflores'),
+            ('mrojas', 'miguel2020', 'Miguel Rojas', 'mrojas@automotrizjj.com', 'vendedor', 'VEN003', 'LIMA', 'San Isidro'),
+            ('ldiaz', 'laura2020', 'Laura Díaz', 'ldiaz@automotrizjj.com', 'vendedor', 'VEN004', 'LIMA', 'San Isidro'),
+            ('dcruz', 'diego2020', 'Diego Cruz', 'dcruz@automotrizjj.com', 'vendedor', 'VEN005', 'LIMA', 'Surco'),
+            ('alopez', 'andrea2020', 'Andrea López', 'alopez@automotrizjj.com', 'vendedor', 'VEN006', 'LIMA', 'Surco'),
+            ('rsilva', 'roberto2020', 'Roberto Silva', 'rsilva@automotrizjj.com', 'vendedor', 'VEN007', 'LIMA', 'La Molina'),
+            ('ptorres', 'patricia2020', 'Patricia Torres', 'ptorres@automotrizjj.com', 'vendedor', 'VEN008', 'LIMA', 'La Molina'),
             
             # PIURA - 2 distritos (2 vendedores por distrito)
-            ('FERNANDO', 'fernando2020', 'Fernando Javier Campos', 'fernando@automotrizjj.com', 'vendedor', 'VEN009', 'PIURA', 'Piura Centro'),
-            ('VALENTINA', 'valentina2020', 'Valentina Morales', 'valentina@automotrizjj.com', 'vendedor', 'VEN010', 'PIURA', 'Piura Centro'),
+            ('fcampos', 'fernando2020', 'Fernando Campos', 'fcampos@automotrizjj.com', 'vendedor', 'VEN009', 'PIURA', 'Piura Centro'),
+            ('vmorales', 'valentina2020', 'Valentina Morales', 'vmorales@automotrizjj.com', 'vendedor', 'VEN010', 'PIURA', 'Piura Centro'),
             
             # AYACUCHO - 2 distritos
-            ('MARCO', 'marco2020', 'Marco Antonio Quispe', 'marco@automotrizjj.com', 'vendedor', 'VEN011', 'AYACUCHO', 'Ayacucho Centro'),
-            ('CARMEN', 'carmen2020', 'Carmen Rosa Huamán', 'carmen@automotrizjj.com', 'vendedor', 'VEN012', 'AYACUCHO', 'Ayacucho Centro'),
+            ('mquispe', 'marco2020', 'Marco Quispe', 'mquispe@automotrizjj.com', 'vendedor', 'VEN011', 'AYACUCHO', 'Ayacucho Centro'),
+            ('chuaman', 'carmen2020', 'Carmen Huamán', 'chuaman@automotrizjj.com', 'vendedor', 'VEN012', 'AYACUCHO', 'Ayacucho Centro'),
         ]
         
         for username, password, full_name, email, role, codigo, provincia, distrito in vendedores:
