@@ -1,23 +1,57 @@
-# Usar imagen base de Node.js
-FROM node:18-alpine
+# ============================================
+# DOCKERFILE FRONTEND - PRODUCCIÓN AKS
+# ============================================
+# Servidor HTTP simple para archivos estáticos de React
+# Sin Nginx - Usa servidor HTTP de Python
 
-# Establecer directorio de trabajo
+# Stage 1: Build
+FROM node:18-alpine AS builder
+
 WORKDIR /app
 
-# Variables de entorno
-ENV NODE_ENV=development
+# Variables de entorno para build
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=${REACT_APP_API_URL}
 
-# Copiar archivos de package
+# Copiar package files
 COPY package*.json ./
 
 # Instalar dependencias
-RUN npm install
+RUN npm ci --only=production
 
-# Copiar el código fuente
+# Copiar código fuente
 COPY . .
 
-# Exponer puerto de Vite (5173)
-EXPOSE 5173
+# Build de producción
+RUN npm run build
 
-# Comando para ejecutar en modo desarrollo
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+# Stage 2: Production - Servidor HTTP simple
+FROM python:3.11-alpine
+
+# Metadatos
+LABEL maintainer="Automotriz JJ"
+LABEL version="1.0"
+LABEL description="Frontend React - Servidor HTTP Simple"
+
+# Crear usuario non-root
+RUN addgroup -g 1000 appuser && \
+    adduser -D -u 1000 -G appuser appuser
+
+# Crear directorio para archivos estáticos
+WORKDIR /app
+
+# Copiar archivos build desde stage anterior
+COPY --from=builder --chown=appuser:appuser /app/dist ./dist
+
+# Cambiar a usuario non-root
+USER appuser
+
+# Exponer puerto 80
+EXPOSE 80
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
+
+# Comando de inicio - Servidor HTTP simple de Python
+CMD ["python", "-m", "http.server", "80", "--directory", "dist", "--bind", "0.0.0.0"]
