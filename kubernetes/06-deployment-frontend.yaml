@@ -1,0 +1,110 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: automotriz-jj-frontend
+  namespace: automotriz-jj
+  labels:
+    app: automotriz-jj
+    component: frontend
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: automotriz-jj
+      component: frontend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: automotriz-jj
+        component: frontend
+        version: v1
+    spec:
+      containers:
+      - name: frontend
+        image: <TU_CONTAINER_REGISTRY>/automotriz-jj-frontend:latest
+        # Ejemplo: automotrizjj.azurecr.io/frontend:latest
+        imagePullPolicy: Always
+        
+        ports:
+        - name: http
+          containerPort: 80
+          protocol: TCP
+        
+        # Variables de entorno
+        env:
+        - name: REACT_APP_API_URL
+          value: "https://api.automotriz-jj.com"  # ACTUALIZAR con tu dominio
+        - name: REACT_APP_VERSION
+          valueFrom:
+            configMapKeyRef:
+              name: automotriz-jj-config
+              key: APP_VERSION
+        
+        # Health Checks
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+        
+        # Recursos
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        
+        # Security Context
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000  # appuser
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: false
+      
+      # Configuración del Pod
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      
+      # Security
+      securityContext:
+        fsGroup: 1000
+        runAsNonRoot: true
+      
+      # Affinity
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: component
+                  operator: In
+                  values:
+                  - frontend
+              topologyKey: kubernetes.io/hostname

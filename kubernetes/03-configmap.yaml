@@ -1,0 +1,39 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: automotriz-jj-config
+  namespace: automotriz-jj
+  labels:
+    app: automotriz-jj
+data:
+  # Configuración de la aplicación
+  APP_NAME: "Automotriz JJ API"
+  APP_VERSION: "1.0.0"
+  DEBUG: "False"  # SIEMPRE False en producción
+  
+  # Tipo de base de datos
+  DB_TYPE: "azure"
+  
+  # Driver ODBC
+  AZURE_SQL_DRIVER: "{ODBC Driver 18 for SQL Server}"
+  
+  # CORS - Orígenes permitidos (separados por coma)
+  # ACTUALIZAR con tu dominio real
+  ALLOWED_ORIGINS: "https://automotriz-jj.com,https://www.automotriz-jj.com,https://app.automotriz-jj.com"
+  
+  # JWT Configuration
+  ALGORITHM: "HS256"
+  ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+  
+  # Usuarios por defecto (solo para referencia)
+  DEFAULT_USERNAME: "admin"
+  
+  # Logging
+  LOG_LEVEL: "INFO"
+  
+  # Uvicorn Workers
+  WORKERS: "2"
+  
+  # Timezone
+  TZ: "America/Lima"

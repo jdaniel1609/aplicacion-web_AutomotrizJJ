@@ -1,0 +1,189 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: automotriz-jj-backend
+  namespace: automotriz-jj
+  labels:
+    app: automotriz-jj
+    component: backend
+    version: v1
+spec:
+  replicas: 2  # Mínimo 2 para alta disponibilidad
+  selector:
+    matchLabels:
+      app: automotriz-jj
+      component: backend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: automotriz-jj
+        component: backend
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: backend
+        image: <TU_CONTAINER_REGISTRY>/automotriz-jj-backend:latest
+        # Ejemplo: automotrizjj.azurecr.io/backend:latest
+        imagePullPolicy: Always
+        
+        ports:
+        - name: http
+          containerPort: 8000
+          protocol: TCP
+        
+        # Variables de entorno desde Secret
+        env:
+        - name: AZURE_SQL_SERVER
+          valueFrom:
+            secretKeyRef:
+              name: automotriz-jj-secrets
+              key: AZURE_SQL_SERVER
+        - name: AZURE_SQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: automotriz-jj-secrets
+              key: AZURE_SQL_DATABASE
+        - name: AZURE_SQL_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: automotriz-jj-secrets
+              key: AZURE_SQL_USERNAME
+        - name: AZURE_SQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: automotriz-jj-secrets
+              key: AZURE_SQL_PASSWORD
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: automotriz-jj-secrets
+              key: SECRET_KEY
+        
+        # Variables de entorno desde ConfigMap
+        - name: APP_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: automotriz-jj-config
+              key: APP_NAME
+        - name: APP_VERSION
+          valueFrom:
+            configMapKeyRef:
+              name: automotriz-jj-config
+              key: APP_VERSION
+        - name: DEBUG
+          valueFrom:
+            configMapKeyRef:
+              name: automotriz-jj-config
+              key: DEBUG
+        - name: DB_TYPE
+          valueFrom:
+            configMapKeyRef:
+              name: automotriz-jj-config
+              key: DB_TYPE
+        - name: AZURE_SQL_DRIVER
+          valueFrom:
+            configMapKeyRef:
+              name: automotriz-jj-config
+              key: AZURE_SQL_DRIVER
+        - name: ALLOWED_ORIGINS
+          valueFrom:
+            configMapKeyRef:
+              name: automotriz-jj-config
+              key: ALLOWED_ORIGINS
+        - name: ALGORITHM
+          valueFrom:
+            configMapKeyRef:
+              name: automotriz-jj-config
+              key: ALGORITHM
+        - name: ACCESS_TOKEN_EXPIRE_MINUTES
+          valueFrom:
+            configMapKeyRef:
+              name: automotriz-jj-config
+              key: ACCESS_TOKEN_EXPIRE_MINUTES
+        - name: TZ
+          valueFrom:
+            configMapKeyRef:
+              name: automotriz-jj-config
+              key: TZ
+        
+        # Health Checks
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        
+        # Startup Probe (para inicialización lenta)
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 0
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30  # 30 * 10s = 5 minutos máximo
+        
+        # Recursos
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        
+        # Security Context
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: false
+      
+      # Configuración del Pod
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      
+      # Security
+      securityContext:
+        fsGroup: 1000
+        runAsNonRoot: true
+      
+      # Affinity
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: component
+                  operator: In
+                  values:
+                  - backend
+              topologyKey: kubernetes.io/hostname
